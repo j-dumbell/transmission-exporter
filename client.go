@@ -1,4 +1,4 @@
-package qbittorrent
+package transmission
 
 import (
 	"bytes"
@@ -70,23 +70,24 @@ const (
 	sessionIDHeader = "X-Transmission-Session-Id"
 )
 
-func post(ctx context.Context, client *Client, body any) error {
+func (c *Client) post(ctx context.Context, body any) error {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("error marshalling body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, client.url.String(), bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url.String(), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return fmt.Errorf("error building req: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req.SetBasicAuth(client.user, client.password)
+	req.SetBasicAuth(c.user, c.password)
+	if c.sessionID != "" {
+		req.Header.Set(sessionIDHeader, c.sessionID)
+	}
 
-	req2 := req.Clone(ctx)
-
-	resp, err := client.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error making request: %w", err)
 	}
@@ -97,9 +98,18 @@ func post(ctx context.Context, client *Client, body any) error {
 		if sessionID == "" {
 			return fmt.Errorf("server returned no session ID")
 		}
-		client.sessionID = sessionID
+		c.sessionID = sessionID
 
-		resp, err = client.httpClient.Do(req2)
+		req2, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url.String(), bytes.NewBuffer(jsonBody))
+		if err != nil {
+			return fmt.Errorf("error building req: %w", err)
+		}
+
+		req2.Header.Set("Accept", "application/json")
+		req2.SetBasicAuth(c.user, c.password)
+		req2.Header.Set(sessionIDHeader, c.sessionID)
+
+		resp, err = c.httpClient.Do(req2)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}

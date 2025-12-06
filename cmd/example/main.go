@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	"github.com/j-dumbell/go-qbittorrent"
+	transmission "github.com/j-dumbell/go-qbittorrent"
 )
 
 func main() {
 	ctx := context.Background()
 
-	client, err := qbittorrent.New(qbittorrent.ClientParams{
+	client, err := transmission.New(transmission.ClientParams{
 		Host:     "http://localhost:9091",
 		User:     "admin",
 		Password: "password",

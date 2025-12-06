@@ -1,7 +1,7 @@
-package qbittorrent
+package transmission
 
 import "context"
 
 func (c *Client) SessionGet(ctx context.Context) error {
-	return post(ctx, c, Request{Method: "session_get"})
+	return c.post(ctx, Request{Method: "session_get"})
 }
