@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	transmission "github.com/j-dumbell/go-qbittorrent"
 )
@@ -18,7 +19,9 @@ func main() {
 		panic(err)
 	}
 
-	if err := client.SessionGet(ctx); err != nil {
+	session, err := client.SessionGet(ctx)
+	if err != nil {
 		panic(err)
 	}
+	fmt.Println(session)
 }

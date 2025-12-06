@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -70,7 +69,7 @@ const (
 	sessionIDHeader = "X-Transmission-Session-Id"
 )
 
-func (c *Client) post(ctx context.Context, body any) error {
+func (c *Client) post(ctx context.Context, body any, dst any) error {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("error marshalling body: %w", err)
@@ -116,19 +115,23 @@ func (c *Client) post(ctx context.Context, body any) error {
 		defer resp.Body.Close()
 	}
 
-	bytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected %d status returned", resp.StatusCode)
 	}
-	fmt.Println(string(bytes))
 
-	// if dst == nil {
-	//	return nil
+	// bytes, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return err
 	// }
-	//
-	// if err := json.NewDecoder(resp.Body).Decode(dst); err != nil {
-	//	return fmt.Errorf("error decoding response body: %w", err)
-	// }
+	// fmt.Println(string(bytes))
+
+	if dst == nil {
+		return nil
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(dst); err != nil {
+		return fmt.Errorf("error decoding response body: %w", err)
+	}
 
 	return nil
 }
