@@ -73,10 +73,15 @@ type Units struct {
 	SpeedUnits  []string `json:"speed-units"`
 }
 
+type sessionResponse struct {
+	Arguments Session `json:"arguments"`
+	Result    string  `json:"result"`
+}
+
 func (c *Client) SessionGet(ctx context.Context) (*Session, error) {
-	var session Session
-	if err := c.post(ctx, Request{Method: "session-get"}, &session); err != nil {
+	var resp sessionResponse
+	if err := c.post(ctx, Request{Method: "session-get"}, &resp); err != nil {
 		return nil, err
 	}
-	return &session, nil
+	return &resp.Arguments, nil
 }
