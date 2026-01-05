@@ -7,13 +7,13 @@ services:
     environment:
       - PUID=1000        # user ID on the host
       - PGID=1000        # group ID on the host
-      - TZ=Etc/UTC       # timezone
-      - USER=admin       # optional: set web UI username
-      - PASS=password  # optional: set web UI password
+      - TZ=Etc/UTC
+      - USER=admin
+      - PASS=password
     volumes:
-      - ./config:/config          # Transmission settings.json stored here
-      - ./downloads:/downloads    # where finished downloads go
-      - ./watch:/watch            # auto-load torrents placed here
+      - ./data:/config          # Transmission settings.json stored here
+      - ./data:/downloads    # where finished downloads go
+      - ./data:/watch            # auto-load torrents placed here
     ports:
       - "9091:9091"     # Web UI
       - "51413:51413"   # Torrent port TCP

@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"sync"
 )
 
 type Client struct {
@@ -15,6 +18,7 @@ type Client struct {
 	user       string
 	password   string
 	sessionID  string
+	mutex      sync.RWMutex
 }
 
 type ClientParams struct {
@@ -28,8 +32,8 @@ type Request struct {
 }
 
 type RequestWithParams[T any] struct {
-	Method string `json:"method"`
-	Params T      `json:"params,omitempty"`
+	Method    string `json:"method"`
+	Arguments T      `json:"arguments,omitempty"`
 }
 
 type ErrorData[T any] struct {
@@ -43,10 +47,17 @@ type ResponseError[T any] struct {
 	Data    ErrorData[T] `json:"data"`
 }
 
-type Response[T any] struct {
-	JSONRPC string           `json:"jsonrpc"`
-	Error   ResponseError[T] `json:"error"`
-	ID      int              `json:"id"`
+func (re ResponseError[T]) Error() string {
+	return fmt.Sprintf("response code: %d, message: %s", re.Code, re.Message)
+}
+
+type Response[R any] struct {
+	Arguments R      `json:"arguments"`
+	Result    string `json:"result"`
+}
+
+func (r Response[R]) isSuccess() bool {
+	return r.Result == "success"
 }
 
 func New(params ClientParams) (*Client, error) {
@@ -69,26 +80,39 @@ const (
 	sessionIDHeader = "X-Transmission-Session-Id"
 )
 
+func (c *Client) doRequest(ctx context.Context, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url.String(), body)
+	if err != nil {
+		return nil, fmt.Errorf("error building request: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.SetBasicAuth(c.user, c.password)
+	if c.sessionID != "" {
+		c.mutex.RLock()
+		req.Header.Set(sessionIDHeader, c.sessionID)
+		c.mutex.RUnlock()
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error executing request: %w", err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) post(ctx context.Context, body any, dst any) error {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("error marshalling body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url.String(), bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return fmt.Errorf("error building req: %w", err)
-	}
+	fmt.Println("===> body", string(jsonBody))
 
-	req.Header.Set("Accept", "application/json")
-	req.SetBasicAuth(c.user, c.password)
-	if c.sessionID != "" {
-		req.Header.Set(sessionIDHeader, c.sessionID)
-	}
-
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(ctx, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return fmt.Errorf("error making request: %w", err)
+		return err
 	}
 	defer resp.Body.Close()
 
@@ -97,26 +121,25 @@ func (c *Client) post(ctx context.Context, body any, dst any) error {
 		if sessionID == "" {
 			return fmt.Errorf("server returned no session ID")
 		}
+
+		c.mutex.Lock()
 		c.sessionID = sessionID
+		c.mutex.Unlock()
 
-		req2, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url.String(), bytes.NewBuffer(jsonBody))
+		resp, err = c.doRequest(ctx, bytes.NewBuffer(jsonBody))
 		if err != nil {
-			return fmt.Errorf("error building req: %w", err)
-		}
-
-		req2.Header.Set("Accept", "application/json")
-		req2.SetBasicAuth(c.user, c.password)
-		req2.Header.Set(sessionIDHeader, c.sessionID)
-
-		resp, err = c.httpClient.Do(req2)
-		if err != nil {
-			return fmt.Errorf("error making request: %w", err)
+			return err
 		}
 		defer resp.Body.Close()
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected %d status returned", resp.StatusCode)
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("unexpected %d status returned: %s", resp.StatusCode, bytes)
 	}
 
 	// bytes, err := io.ReadAll(resp.Body)
@@ -134,4 +157,26 @@ func (c *Client) post(ctx context.Context, body any, dst any) error {
 	}
 
 	return nil
+}
+
+func post[R any](ctx context.Context, client *Client, method string) (*R, error) {
+	var response Response[R]
+	if err := client.post(ctx, Request{Method: method}, &response); err != nil {
+		return nil, err
+	}
+	if !response.isSuccess() {
+		return nil, errors.New(response.Result)
+	}
+	return &response.Arguments, nil
+}
+
+func postWithArgs[P any, R any](ctx context.Context, client *Client, method string, params P) (*R, error) {
+	var response Response[R]
+	if err := client.post(ctx, RequestWithParams[P]{Method: method, Arguments: params}, &response); err != nil {
+		return nil, err
+	}
+	if !response.isSuccess() {
+		return nil, errors.New(response.Result)
+	}
+	return &response.Arguments, nil
 }

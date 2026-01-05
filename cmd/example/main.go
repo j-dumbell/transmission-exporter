@@ -19,9 +19,42 @@ func main() {
 		panic(err)
 	}
 
-	session, err := client.SessionGet(ctx)
+	// torrents, err := client.TorrentGet(ctx, transmission.AllTorrents)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// var torrentID int64
+	// for _, torrent := range torrents.Torrents {
+	// 	if torrent.Name == "ubuntu-25.10-desktop-amd64.iso" {
+	// 		torrentID = torrent.ID
+	// 	}
+	// }
+	// fmt.Println("torrentID ", torrentID)
+	//
+	// if err := client.QueueMoveTop(ctx, transmission.NewTorrentIDs(torrentID)); err != nil {
+	// 	panic(err)
+	// }
+
+	groups, err := client.GroupGet(ctx, nil)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(session)
+	fmt.Printf("%+v\n", groups)
+
+	// err = client.GroupSet(ctx, transmission.GroupSetArgs{
+	// 	Name:                  "blahblah",
+	// 	HonorsSessionLimits:   toPtr(true),
+	// 	SpeedLimitDown:        toPtr(10),
+	// 	SpeedLimitDownEnabled: toPtr(false),
+	// 	SpeedLimitUp:          toPtr(20),
+	// 	SpeedLimitUpEnabled:   toPtr(false),
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
+}
+
+func toPtr[T any](t T) *T {
+	return &t
 }
