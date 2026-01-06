@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/j-dumbell/go-qbittorrent/pkg/exporter"
+	"github.com/j-dumbell/go-qbittorrent/internal/exporter"
 	"github.com/j-dumbell/go-qbittorrent/pkg/transmission"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

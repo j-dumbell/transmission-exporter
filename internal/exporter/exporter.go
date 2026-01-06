@@ -246,3 +246,4 @@ func newTorrentCountByStatus() map[string]int {
 	m["unknown"] = 0
 	return m
 }
+
