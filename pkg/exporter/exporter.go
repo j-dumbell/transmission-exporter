@@ -3,6 +3,7 @@ package exporter
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/j-dumbell/go-qbittorrent/pkg/transmission"
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,7 +55,8 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	statsResult, err := e.transmissionClient.SessionStats(ctx)
 	if err != nil {
@@ -107,7 +109,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		float64(statsResult.DownloadSpeed),
 	)
 
-	torretGetResult, err := e.transmissionClient.TorrentGet(ctx, transmission.TorrentGetArgs{
+	torrentGetResult, err := e.transmissionClient.TorrentGet(ctx, transmission.TorrentGetArgs{
 		IDs:    transmission.AllTorrents,
 		Fields: transmission.AllTorrentFields,
 	})
@@ -118,7 +120,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	torrentCountByStatus := newTorrentCountByStatus()
 
-	for _, torrent := range torretGetResult.Torrents {
+	for _, torrent := range torrentGetResult.Torrents {
 		torrentCountByStatus[torrent.Status.String()]++
 
 		if e.exportTorrentLevelMetrics {
@@ -208,14 +210,14 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 			ch <- prometheus.MustNewConstMetric(
 				torrentSecondsDownloading,
-				prometheus.GaugeValue,
+				prometheus.CounterValue,
 				float64(torrent.SecondsDownloading),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
 				torrentSecondsSeeding,
-				prometheus.GaugeValue,
+				prometheus.CounterValue,
 				float64(torrent.SecondsSeeding),
 				torrent.HashString,
 			)

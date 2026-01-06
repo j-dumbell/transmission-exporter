@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 )
 
 type Client struct {
@@ -69,10 +70,12 @@ func New(params ClientParams) (*Client, error) {
 	fullURL := hostPart.ResolveReference(apiPart)
 
 	return &Client{
-		url:        *fullURL,
-		httpClient: http.Client{},
-		user:       params.User,
-		password:   params.Password,
+		url: *fullURL,
+		httpClient: http.Client{
+			Timeout: 30 * time.Second,
+		},
+		user:     params.User,
+		password: params.Password,
 	}, nil
 }
 

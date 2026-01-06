@@ -10,49 +10,49 @@ const (
 var (
 	downloadedBytes = prometheus.NewDesc(
 		"transmission_downloaded_bytes_total",
-		"Total number of bytes downloaded since Transmission started (from cumulative-stats).",
+		"Total number of bytes downloaded since Transmission daemon started.",
 		nil, nil,
 	)
 
 	uploadedBytes = prometheus.NewDesc(
 		"transmission_uploaded_bytes_total",
-		"Total number of bytes uploaded since Transmission started (from cumulative-stats).",
+		"Total number of bytes uploaded since Transmission daemon started.",
 		nil, nil,
 	)
 
 	torrentsAdded = prometheus.NewDesc(
 		"transmission_torrents_added_total",
-		"Total number of torrents added since Transmission started (from cumulative-stats).",
+		"Total number of torrents added since Transmission daemon started.",
 		nil, nil,
 	)
 
 	secondsActive = prometheus.NewDesc(
 		"transmission_seconds_active_total",
-		"Total number of seconds Transmission has been active since it started (from cumulative-stats).",
+		"Total number of seconds the Transmission daemon has been active since it started.",
 		nil, nil,
 	)
 
 	sessions = prometheus.NewDesc(
 		"transmission_sessions_total",
-		"Total number of sessions since Transmission started (from cumulative-stats).",
+		"Total number of sessions since Transmission daemon started.",
 		nil, nil,
 	)
 
 	uploadSpeed = prometheus.NewDesc(
 		"transmission_upload_bytes_per_second",
-		"Aggregated upload speed in bytes/s across all torrents.",
+		"Current aggregated upload speed across all torrents in bytes per second.",
 		nil, nil,
 	)
 
 	downloadSpeed = prometheus.NewDesc(
 		"transmission_download_bytes_per_second",
-		"Aggregated download speed in bytes/s across all torrents.",
+		"Current aggregated download speed across all torrents in bytes per second.",
 		nil, nil,
 	)
 
 	torrents = prometheus.NewDesc(
 		"transmission_torrents",
-		"Number of torrents by status",
+		"Number of torrents grouped by status.",
 		[]string{"status"}, nil,
 	)
 )
@@ -61,12 +61,12 @@ var (
 var (
 	torrentDownloadSpeed = newTorrentLevelDesc(
 		"transmission_torrent_download_bytes_per_second",
-		"Torrent download speed in bytes/s.",
+		"Current download speed for this torrent in bytes per second.",
 	)
 
 	torrentUploadSpeed = newTorrentLevelDesc(
 		"transmission_torrent_upload_bytes_per_second",
-		"Torrent upload speed in bytes/s.",
+		"Current upload speed for this torrent in bytes per second.",
 	)
 
 	torrentTotalSize = newTorrentLevelDesc(
@@ -76,62 +76,62 @@ var (
 
 	torrentSizeWhenDone = newTorrentLevelDesc(
 		"transmission_torrent_size_when_done_bytes",
-		"Size of the torrent when done (bytes); differs from transmission_torrent_total_size_bytes if files are not selected.",
+		"Size of the torrent when download completes in bytes. May differ from total size if some files are not selected for download.",
 	)
 
 	torrentLeftUntilDone = newTorrentLevelDesc(
 		"transmission_torrent_left_until_done_bytes",
-		"Bytes left until the torrent is considered done (only counts wanted data).",
+		"Number of bytes remaining until the torrent download is complete. Only counts wanted data.",
 	)
 
 	torrentDownloadedEver = newTorrentLevelDesc(
 		"transmission_torrent_downloaded_bytes_total",
-		"Total bytes downloaded for this torrent since it was added.",
+		"Total number of bytes downloaded for this torrent since it was added.",
 	)
 
 	torrentUploadedEver = newTorrentLevelDesc(
 		"transmission_torrent_uploaded_bytes_total",
-		"Total bytes uploaded for this torrent since it was added.",
+		"Total number of bytes uploaded for this torrent since it was added.",
 	)
 
 	torrentCorruptedEver = newTorrentLevelDesc(
 		"transmission_torrent_corrupt_bytes_total",
-		"Total corrupt bytes recorded for this torrent since it was added.",
+		"Total number of corrupt bytes recorded for this torrent since it was added.",
 	)
 
 	torrentPeersConnected = newTorrentLevelDesc(
 		"transmission_torrent_peers_connected",
-		"Number of peers currently connected for this torrent.",
+		"Current number of peers connected for this torrent.",
 	)
 
 	torrentPeersSendingToUs = newTorrentLevelDesc(
 		"transmission_torrent_peers_sending_to_us",
-		"Number of connected peers currently sending data to us for this torrent.",
+		"Current number of connected peers sending data to us for this torrent.",
 	)
 
 	torrentPeersGettingFromUs = newTorrentLevelDesc(
 		"transmission_torrent_peers_getting_from_us",
-		"Number of connected peers currently receiving data from us for this torrent.",
+		"Current number of connected peers receiving data from us for this torrent.",
 	)
 
 	torrentWebseedsSendingToUs = newTorrentLevelDesc(
 		"transmission_torrent_webseeds_sending_to_us",
-		"Number of webseeds currently sending data to us for this torrent.",
+		"Current number of webseeds sending data to us for this torrent.",
 	)
 
 	torrentSecondsDownloading = newTorrentLevelDesc(
-		"transmission_torrent_seconds_downloading",
-		"Total seconds this torrent has spent downloading since it was added.",
+		"transmission_torrent_seconds_downloading_total",
+		"Total number of seconds this torrent has spent downloading since it was added.",
 	)
 
 	torrentSecondsSeeding = newTorrentLevelDesc(
-		"transmission_torrent_seconds_seeding",
-		"Total seconds this torrent has spent seeding since it was added.",
+		"transmission_torrent_seconds_seeding_total",
+		"Total number of seconds this torrent has spent seeding since it was added.",
 	)
 
 	torrentInfo = prometheus.NewDesc(
 		"transmission_torrent_info",
-		"Static information about a Transmission torrent, exposed as labels and intended for joining with other torrent metrics.",
+		"Static information about a Transmission torrent. Always has value 1. Use this metric to join with other torrent-level metrics using the torrent_hash and torrent_name labels.",
 		[]string{torrentHashLabel, torrentNameLabel}, nil,
 	)
 )
