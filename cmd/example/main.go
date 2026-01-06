@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	transmission "github.com/j-dumbell/go-qbittorrent"
+	"github.com/j-dumbell/go-qbittorrent/pkg/transmission"
 )
 
 func main() {
@@ -19,40 +19,24 @@ func main() {
 		panic(err)
 	}
 
-	// torrents, err := client.TorrentGet(ctx, transmission.AllTorrents)
+	// var fields []string
+	// for _, field := range transmission.AllTorrentFields {
+	// 	if !slices.Contains([]string{"availability", "pieces"}, field) {
+	// 		fields = append(fields, field)
+	// 	}
+	// }
+	//
+	// _, err = client.TorrentGet(ctx, transmission.TorrentGetArgs{IDs: transmission.AllTorrents, Fields: fields})
 	// if err != nil {
 	// 	panic(err)
 	// }
-	//
-	// var torrentID int64
-	// for _, torrent := range torrents.Torrents {
-	// 	if torrent.Name == "ubuntu-25.10-desktop-amd64.iso" {
-	// 		torrentID = torrent.ID
-	// 	}
-	// }
-	// fmt.Println("torrentID ", torrentID)
-	//
-	// if err := client.QueueMoveTop(ctx, transmission.NewTorrentIDs(torrentID)); err != nil {
-	// 	panic(err)
-	// }
 
-	groups, err := client.GroupGet(ctx, nil)
+	session, err := client.SessionGet(ctx)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", groups)
 
-	// err = client.GroupSet(ctx, transmission.GroupSetArgs{
-	// 	Name:                  "blahblah",
-	// 	HonorsSessionLimits:   toPtr(true),
-	// 	SpeedLimitDown:        toPtr(10),
-	// 	SpeedLimitDownEnabled: toPtr(false),
-	// 	SpeedLimitUp:          toPtr(20),
-	// 	SpeedLimitUpEnabled:   toPtr(false),
-	// })
-	// if err != nil {
-	// 	panic(err)
-	// }
+	fmt.Printf("%+v\n", session)
 }
 
 func toPtr[T any](t T) *T {

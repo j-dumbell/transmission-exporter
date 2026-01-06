@@ -108,7 +108,7 @@ func (c *Client) post(ctx context.Context, body any, dst any) error {
 		return fmt.Errorf("error marshalling body: %w", err)
 	}
 
-	fmt.Println("===> body", string(jsonBody))
+	// fmt.Println("===> body", string(jsonBody))
 
 	resp, err := c.doRequest(ctx, bytes.NewBuffer(jsonBody))
 	if err != nil {

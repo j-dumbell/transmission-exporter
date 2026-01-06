@@ -134,13 +134,13 @@ func (c *Client) SessionSet(ctx context.Context, args SessionSetArgs) error {
 }
 
 type SessionStatsResult struct {
-	ActiveTorrentCount int     `json:"activeTorrentCount"`
-	DownloadSpeed      float64 `json:"downloadSpeed"`
-	PausedTorrentCount int     `json:"pausedTorrentCount"`
-	TorrentCount       int     `json:"torrentCount"`
-	UploadSpeed        int     `json:"uploadSpeed"`
-	CumulativeStats    Stats   `json:"cumulative-stats"`
-	CurrentStats       Stats   `json:"current-stats"`
+	ActiveTorrentCount int   `json:"activeTorrentCount"`
+	DownloadSpeed      int   `json:"downloadSpeed"`
+	PausedTorrentCount int   `json:"pausedTorrentCount"`
+	TorrentCount       int   `json:"torrentCount"`
+	UploadSpeed        int   `json:"uploadSpeed"`
+	CumulativeStats    Stats `json:"cumulative-stats"`
+	CurrentStats       Stats `json:"current-stats"`
 }
 
 type Stats struct {
