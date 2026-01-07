@@ -5,3 +5,6 @@ start-exporter:
 	PORT=2112 \
 	EXPORT_TORRENT_LEVEL_METRICS=true \
 	go run ./cmd/exporter/main.go
+
+docker-build-exporter:
+	docker build -f cmd/exporter/Dockerfile .
