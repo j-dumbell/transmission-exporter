@@ -21,36 +21,19 @@ type TransmissionClient interface {
 	TorrentGet(ctx context.Context, args transmission.TorrentGetArgs) (*transmission.TorrentGetResult, error)
 }
 
-func New(transmissionClient *transmission.Client, logger *slog.Logger, exportTorrentLevelMetrics bool) *Exporter {
+func New(transmissionClient TransmissionClient, logger *slog.Logger, exportTorrentLevelMetrics bool) *Exporter {
 	return &Exporter{transmissionClient: transmissionClient, logger: logger, exportTorrentLevelMetrics: exportTorrentLevelMetrics}
 }
 
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
-	ch <- downloadedBytes
-	ch <- uploadedBytes
-	ch <- torrentsAdded
-	ch <- secondsActive
-	ch <- sessions
-	ch <- uploadSpeed
-	ch <- downloadSpeed
-	ch <- torrents
+	for _, desc := range globalDescs {
+		ch <- desc
+	}
 
 	if e.exportTorrentLevelMetrics {
-		ch <- torrentDownloadSpeed
-		ch <- torrentUploadSpeed
-		ch <- torrentTotalSize
-		ch <- torrentSizeWhenDone
-		ch <- torrentLeftUntilDone
-		ch <- torrentDownloadedEver
-		ch <- torrentUploadedEver
-		ch <- torrentCorruptedEver
-		ch <- torrentPeersConnected
-		ch <- torrentPeersSendingToUs
-		ch <- torrentPeersGettingFromUs
-		ch <- torrentWebseedsSendingToUs
-		ch <- torrentSecondsDownloading
-		ch <- torrentSecondsSeeding
-		ch <- torrentInfo
+		for _, desc := range torrentLevelDescs {
+			ch <- desc
+		}
 	}
 }
 
@@ -68,43 +51,43 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- prometheus.MustNewConstMetric(
-		downloadedBytes,
+		globalDescs[metricNameDownloadedBytesTotal],
 		prometheus.CounterValue,
 		float64(statsResult.CumulativeStats.DownloadedBytes),
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		uploadedBytes,
+		globalDescs[metricNameUploadedBytesTotal],
 		prometheus.CounterValue,
 		float64(statsResult.CumulativeStats.UploadedBytes),
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		torrentsAdded,
+		globalDescs[metricNameTorrentsAddedTotal],
 		prometheus.CounterValue,
 		float64(statsResult.CumulativeStats.FilesAdded),
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		secondsActive,
+		globalDescs[metricNameSecondsActiveTotal],
 		prometheus.CounterValue,
 		float64(statsResult.CumulativeStats.SecondsActive),
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		sessions,
+		globalDescs[metricNameSessionsTotal],
 		prometheus.CounterValue,
 		float64(statsResult.CumulativeStats.SessionCount),
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		uploadSpeed,
+		globalDescs[metricNameUploadBytesPerSecond],
 		prometheus.GaugeValue,
 		float64(statsResult.UploadSpeed),
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		downloadSpeed,
+		globalDescs[metricNameDownloadBytesPerSecond],
 		prometheus.GaugeValue,
 		float64(statsResult.DownloadSpeed),
 	)
@@ -125,105 +108,105 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 		if e.exportTorrentLevelMetrics {
 			ch <- prometheus.MustNewConstMetric(
-				torrentDownloadSpeed,
+				torrentLevelDescs[metricNameTorrentDownloadBytesPerSecond],
 				prometheus.GaugeValue,
 				float64(torrent.RateDownload),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentUploadSpeed,
+				torrentLevelDescs[metricNameTorrentUploadBytesPerSecond],
 				prometheus.GaugeValue,
 				float64(torrent.RateUpload),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentTotalSize,
+				torrentLevelDescs[metricNameTorrentTotalSizeBytes],
 				prometheus.GaugeValue,
 				float64(torrent.TotalSize),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentSizeWhenDone,
+				torrentLevelDescs[metricNameTorrentSizeWhenDoneBytes],
 				prometheus.GaugeValue,
 				float64(torrent.SizeWhenDone),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentLeftUntilDone,
+				torrentLevelDescs[metricNameTorrentLeftUntilDoneBytes],
 				prometheus.GaugeValue,
 				float64(torrent.LeftUntilDone),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentDownloadedEver,
+				torrentLevelDescs[metricNameTorrentDownloadBytesTotal],
 				prometheus.CounterValue,
 				float64(torrent.DownloadedEver),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentUploadedEver,
+				torrentLevelDescs[metricNameTorrentUploadBytesTotal],
 				prometheus.CounterValue,
 				float64(torrent.UploadedEver),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentCorruptedEver,
+				torrentLevelDescs[metricNameTorrentCorruptBytesTotal],
 				prometheus.CounterValue,
 				float64(torrent.CorruptEver),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentPeersConnected,
+				torrentLevelDescs[metricNameTorrentPeersConnected],
 				prometheus.GaugeValue,
 				float64(torrent.PeersConnected),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentPeersSendingToUs,
+				torrentLevelDescs[metricNameTorrentPeersSendingToUs],
 				prometheus.GaugeValue,
 				float64(torrent.PeersSendingToUs),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentPeersGettingFromUs,
+				torrentLevelDescs[metricNameTorrentPeersGettingFromUs],
 				prometheus.GaugeValue,
 				float64(torrent.PeersGettingFromUs),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentWebseedsSendingToUs,
+				torrentLevelDescs[metricNameTorrentWebseedsSendingToUs],
 				prometheus.GaugeValue,
 				float64(torrent.WebseedsSendingToUs),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentSecondsDownloading,
+				torrentLevelDescs[metricNameTorrentSecondsDownloadingTotal],
 				prometheus.CounterValue,
 				float64(torrent.SecondsDownloading),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentSecondsSeeding,
+				torrentLevelDescs[metricNameTorrentSecondsSeedingTotal],
 				prometheus.CounterValue,
 				float64(torrent.SecondsSeeding),
 				torrent.HashString,
 			)
 
 			ch <- prometheus.MustNewConstMetric(
-				torrentInfo,
+				torrentLevelDescs[metricNameTorrentInfo],
 				prometheus.GaugeValue,
 				1,
 				torrent.HashString,
@@ -233,7 +216,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	for status, count := range torrentCountByStatus {
-		ch <- prometheus.MustNewConstMetric(torrents, prometheus.GaugeValue, float64(count), status)
+		ch <- prometheus.MustNewConstMetric(globalDescs[metricNameTorrents], prometheus.GaugeValue, float64(count), status)
 	}
 
 }
@@ -246,4 +229,3 @@ func newTorrentCountByStatus() map[string]int {
 	m["unknown"] = 0
 	return m
 }
-
