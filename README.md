@@ -1,5 +1,9 @@
 # Transmission Exporter
 
+![Build](https://github.com/j-dumbell/transmission-exporter/actions/workflows/build-test.yml/badge.svg)
+![License](https://img.shields.io/github/license/j-dumbell/transmission-exporter)
+![Go version](https://img.shields.io/github/go-mod/go-version/j-dumbell/transmission-exporter)
+
 A Prometheus exporter for the [Transmission](https://transmissionbt.com/) bittorrent client, written in Go. This exporter collects metrics from Transmission's RPC API and exposes them in Prometheus format for monitoring and alerting.
 
 ## Metrics
