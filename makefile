@@ -9,8 +9,18 @@ start-exporter:
 build-exporter:
 	go build ./cmd/exporter
 
+DOCKER_USERNAME ?= jdumbell92
+IMAGE_NAME ?= transmission-exporter
+IMAGE_TAG ?= latest
+IMAGE ?= $(DOCKER_USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG)
+
 docker-build-exporter:
-	docker build -f cmd/exporter/Dockerfile .
+	docker build -f cmd/exporter/Dockerfile -t $(IMAGE) .
+
+docker-push-exporter: docker-build-exporter
+	docker push $(IMAGE)
+
+docker-build-push-exporter: docker-push-exporter
 
 fmt:
 	gofmt -w .
