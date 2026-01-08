@@ -33,7 +33,7 @@ func TestStructJSONFields(t *testing.T) {
 	t.Run("unexported fields", func(t *testing.T) {
 		type Unexported struct {
 			Foo string `json:"foo"`
-			bar int    `json:"bar"`
+			bar int
 		}
 		assert.Equal(t, []string{"foo"}, structJSONFields[Unexported]())
 	})
