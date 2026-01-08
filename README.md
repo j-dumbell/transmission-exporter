@@ -1,2 +1,2 @@
 # go-qbittorrent
-qbittorrent API client for Golang.
+Transmission API client for Golang.
