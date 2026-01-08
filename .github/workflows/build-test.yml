@@ -1,0 +1,48 @@
+name: build-test
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check for dependency drift
+        run: |
+          go mod tidy
+          git diff --exit-code
+
+      - name: gofmt
+        run: test -z "$(gofmt -l .)"
+
+      - name: go vet
+        run: make vet
+
+      - name: Run tests
+        run: make test
+
+      - name: Build
+        run: make build-exporter
+
+      - name: Docker build
+        run: make docker-build-exporter
