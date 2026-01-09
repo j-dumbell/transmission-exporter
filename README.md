@@ -101,6 +101,10 @@ export EXPORT_TORRENT_LEVEL_METRICS=true
 ./transmission-exporter
 ```
 
+## Grafana dashboard
+
+A Grafana dashboard built from the Prometheus metrics from this exporter can be found [here](grafana/dashboards/transmission-exporter.json).
+
 ## Development
 
 ### Start local services (Transmission, Prometheus, Grafana)

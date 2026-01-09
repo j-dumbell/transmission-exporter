@@ -18,6 +18,7 @@ type Exporter struct {
 
 type TransmissionClient interface {
 	SessionStats(ctx context.Context) (*transmission.SessionStatsResult, error)
+	SessionGet(ctx context.Context) (*transmission.Session, error)
 	TorrentGet(ctx context.Context, args transmission.TorrentGetArgs) (*transmission.TorrentGetResult, error)
 }
 
@@ -90,6 +91,19 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		globalDescs[metricNameDownloadBytesPerSecond],
 		prometheus.GaugeValue,
 		float64(statsResult.DownloadSpeed),
+	)
+
+	session, err := e.transmissionClient.SessionGet(ctx)
+	if err != nil {
+		e.logger.Error("error getting session from Transmission API", "err", err)
+		return
+	}
+
+	ch <- prometheus.MustNewConstMetric(
+		globalDescs[metricNameVersion],
+		prometheus.GaugeValue,
+		1,
+		session.Version.Sem(),
 	)
 
 	torrentGetResult, err := e.transmissionClient.TorrentGet(ctx, transmission.TorrentGetArgs{
@@ -202,6 +216,13 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				torrentLevelDescs[metricNameTorrentSecondsSeedingTotal],
 				prometheus.CounterValue,
 				float64(torrent.SecondsSeeding),
+				torrent.HashString,
+			)
+
+			ch <- prometheus.MustNewConstMetric(
+				torrentLevelDescs[metricNameTorrentStatus],
+				prometheus.GaugeValue,
+				float64(torrent.Status),
 				torrent.HashString,
 			)
 

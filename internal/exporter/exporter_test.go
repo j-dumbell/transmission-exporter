@@ -97,6 +97,10 @@ func TestExporter(t *testing.T) {
 			{Labels: map[string]string{hashLabel: t1.HashString}, Value: float64(t1.SecondsSeeding)},
 			{Labels: map[string]string{hashLabel: t2.HashString}, Value: float64(t2.SecondsSeeding)},
 		})
+		assertMetricValueWithLabels(t, mfs, metricNameTorrentStatus, prometheus.GaugeValue, []MetricValue{
+			{Labels: map[string]string{hashLabel: t1.HashString}, Value: float64(t1.Status)},
+			{Labels: map[string]string{hashLabel: t2.HashString}, Value: float64(t2.Status)},
+		})
 		assertMetricValueWithLabels(t, mfs, metricNameTorrentInfo, prometheus.GaugeValue, []MetricValue{
 			{Labels: map[string]string{hashLabel: t1.HashString, nameLabel: t1.Name}, Value: float64(1)},
 			{Labels: map[string]string{hashLabel: t2.HashString, nameLabel: t2.Name}, Value: float64(1)},
@@ -121,6 +125,9 @@ func assertGlobalMetrics(t *testing.T, mfs []*promclient.MetricFamily) {
 		{Labels: map[string]string{statusLabel: transmission.TorrentStatusSeedWait.String()}, Value: 0},
 		{Labels: map[string]string{statusLabel: transmission.TorrentStatusSeed.String()}, Value: 1},
 		{Labels: map[string]string{statusLabel: "unknown"}, Value: 0},
+	})
+	assertMetricValueWithLabels(t, mfs, metricNameVersion, prometheus.GaugeValue, []MetricValue{
+		{Labels: map[string]string{versionLabel: mockSession.Version}, Value: 1},
 	})
 }
 
@@ -208,6 +215,10 @@ func (t *TestTransmissionClient) SessionStats(_ context.Context) (*transmission.
 	return &mockSessionStatsResult, nil
 }
 
+func (t *TestTransmissionClient) SessionGet(_ context.Context) (*transmission.Session, error) {
+	return &mockSession, nil
+}
+
 func (t *TestTransmissionClient) TorrentGet(_ context.Context, _ transmission.TorrentGetArgs) (*transmission.TorrentGetResult, error) {
 	torrentGetResult := transmission.TorrentGetResult{
 		Torrents: []transmission.Torrent{t1, t2},
@@ -229,6 +240,10 @@ var mockSessionStatsResult = transmission.SessionStatsResult{
 		SecondsActive:   99,
 		SessionCount:    22,
 	},
+}
+
+var mockSession = transmission.Session{
+	Version: "4.0.0",
 }
 
 var t1 = transmission.Torrent{

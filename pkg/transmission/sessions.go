@@ -1,6 +1,9 @@
 package transmission
 
-import "context"
+import (
+	"context"
+	"strings"
+)
 
 type Session struct {
 	AltSpeedDown                     int     `json:"alt-speed-down"`
@@ -60,7 +63,25 @@ type Session struct {
 	TrashOriginalTorrentFiles        bool    `json:"trash-original-torrent-files"`
 	Units                            Units   `json:"units"`
 	UTPEnabled                       bool    `json:"utp-enabled"`
-	Version                          string  `json:"version"`
+	Version                          Version `json:"version"`
+}
+
+type Version string
+
+func (v Version) Sem() string {
+	parts := strings.Split(string(v), " ")
+	if len(parts) != 2 {
+		return ""
+	}
+	return parts[0]
+}
+
+func (v Version) Hash() string {
+	parts := strings.Split(string(v), " ")
+	if len(parts) != 2 {
+		return ""
+	}
+	return parts[0]
 }
 
 type Units struct {

@@ -3,9 +3,10 @@ package exporter
 import "github.com/prometheus/client_golang/prometheus"
 
 const (
-	hashLabel   = "hash"
-	nameLabel   = "name"
-	statusLabel = "status"
+	hashLabel    = "hash"
+	nameLabel    = "name"
+	statusLabel  = "status"
+	versionLabel = "version"
 )
 
 type metricName string
@@ -20,6 +21,7 @@ const (
 	metricNameUploadBytesPerSecond   metricName = "transmission_upload_bytes_per_second"
 	metricNameDownloadBytesPerSecond metricName = "transmission_download_bytes_per_second"
 	metricNameTorrents               metricName = "transmission_torrents"
+	metricNameVersion                metricName = "transmission_version_info"
 
 	// torrent-level
 	metricNameTorrentDownloadBytesPerSecond  metricName = "transmission_torrent_download_bytes_per_second"
@@ -36,6 +38,7 @@ const (
 	metricNameTorrentWebseedsSendingToUs     metricName = "transmission_torrent_webseeds_sending_to_us"
 	metricNameTorrentSecondsDownloadingTotal metricName = "transmission_torrent_seconds_downloading_total"
 	metricNameTorrentSecondsSeedingTotal     metricName = "transmission_torrent_seconds_seeding_total"
+	metricNameTorrentStatus                  metricName = "transmission_torrent_status"
 	metricNameTorrentInfo                    metricName = "transmission_torrent_info"
 )
 
@@ -78,6 +81,11 @@ var globalDescConfigs = []descConfig{
 		Metric:         metricNameTorrents,
 		Help:           "Number of torrents grouped by status.",
 		VariableLabels: []string{statusLabel},
+	},
+	{
+		Metric:         metricNameVersion,
+		Help:           "Transmission version information. Always has value 1. Use this metric to identify the Transmission version using the version label.",
+		VariableLabels: []string{versionLabel},
 	},
 }
 
@@ -152,6 +160,11 @@ var torrentLevelDescConfigs = []descConfig{
 	{
 		Metric:         metricNameTorrentSecondsSeedingTotal,
 		Help:           "Total number of seconds this torrent has spent seeding since it was added.",
+		VariableLabels: []string{hashLabel},
+	},
+	{
+		Metric:         metricNameTorrentStatus,
+		Help:           "Current status of the torrent, expressed as an integer enum.",
 		VariableLabels: []string{hashLabel},
 	},
 	{
