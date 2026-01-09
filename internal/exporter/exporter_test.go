@@ -127,7 +127,7 @@ func assertGlobalMetrics(t *testing.T, mfs []*promclient.MetricFamily) {
 		{Labels: map[string]string{statusLabel: "unknown"}, Value: 0},
 	})
 	assertMetricValueWithLabels(t, mfs, metricNameVersion, prometheus.GaugeValue, []MetricValue{
-		{Labels: map[string]string{versionLabel: mockSession.Version}, Value: 1},
+		{Labels: map[string]string{versionLabel: mockSession.Version.Sem()}, Value: 1},
 	})
 }
 
