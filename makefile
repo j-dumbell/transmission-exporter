@@ -13,12 +13,16 @@ DOCKER_USERNAME ?= jdumbell92
 IMAGE_NAME ?= transmission-exporter
 IMAGE_TAG ?= latest
 IMAGE ?= $(DOCKER_USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG)
+PLATFORMS ?= linux/amd64,linux/arm64
 
-docker-build-exporter:
-	docker build -f cmd/exporter/Dockerfile -t $(IMAGE) .
+docker-buildx-setup:
+	docker buildx inspect multiplatform > /dev/null 2>&1 || docker buildx create --name multiplatform --use --bootstrap
 
-docker-push-exporter: docker-build-exporter
-	docker push $(IMAGE)
+docker-build-exporter: docker-buildx-setup
+	docker buildx build --platform $(PLATFORMS) -f cmd/exporter/Dockerfile -t $(IMAGE) .
+
+docker-push-exporter: docker-buildx-setup
+	docker buildx build --platform $(PLATFORMS) -f cmd/exporter/Dockerfile -t $(IMAGE) --push .
 
 docker-build-push-exporter: docker-push-exporter
 

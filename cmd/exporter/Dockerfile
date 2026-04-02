@@ -1,10 +1,11 @@
-FROM golang:1.25.5-bookworm as builder
+FROM --platform=$BUILDPLATFORM golang:1.25.5-bookworm AS builder
+ARG TARGETOS TARGETARCH
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 ENV CGO_ENABLED=0
-RUN go build -trimpath -ldflags="-s -w" -o /out/app ./cmd/exporter
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/app ./cmd/exporter
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=builder /out/app /app
